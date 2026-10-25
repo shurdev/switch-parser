@@ -1,0 +1,7 @@
+*.nsp
+*.nsz
+*.xci
+*.xcz
+*.ipa
+*.keys
+build/

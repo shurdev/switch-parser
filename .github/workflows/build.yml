@@ -1,0 +1,53 @@
+name: Build IPA with nxnative
+
+on:
+  workflow_dispatch:
+    inputs:
+      game_url:
+        description: 'Direct download URL for the NSP file'
+        required: true
+        type: string
+      game_name:
+        description: 'Game folder name'
+        required: false
+        default: 'Game'
+        type: string
+
+jobs:
+  build-ipa:
+    runs-on: macos-14
+    steps:
+      - name: Checkout nxnative repository
+        uses: actions/checkout@v4
+        with:
+          repository: seedds/nxnative
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          brew install xcodegen zstd spirv-cross glslang
+          brew install --cask dotnet-sdk
+          python3 -m pip install lz4 capstone fonttools "backports.zstd; python_version < '3.14'"
+
+      - name: Setup prod.keys
+        env:
+          PROD_KEYS_CONTENT: ${{ secrets.PROD_KEYS }}
+        run: |
+          mkdir -p ~/keys
+          echo "$PROD_KEYS_CONTENT" > ~/keys/prod.keys
+
+      - name: Download game NSP
+        run: |
+          mkdir -p "${{ github.workspace }}/game_input"
+          curl -fL -o "${{ github.workspace }}/game_input/${{ inputs.game_name }}.nsp" "${{ inputs.game_url }}"
+
+      - name: Build IPA
+        run: |
+          python3 scripts/build_ipa_from_nsp.py "${{ github.workspace }}/game_input" -k ~/keys/prod.keys
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-ipa
+          path: "${{ github.workspace }}/game_input/*.ipa"
+          retention-days: 5
