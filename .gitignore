@@ -5,3 +5,5 @@
 *.ipa
 *.keys
 build/
+
+cloudflared.exe

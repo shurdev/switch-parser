@@ -3,14 +3,9 @@ name: Build IPA with nxnative
 on:
   workflow_dispatch:
     inputs:
-      game_url:
-        description: 'Direct download URL for the NSP file'
+      server_url:
+        description: 'Base URL from Cloudflare Tunnel (e.g. https://xxx.trycloudflare.com)'
         required: true
-        type: string
-      game_name:
-        description: 'Game folder name'
-        required: false
-        default: 'Game'
         type: string
 
 jobs:
@@ -25,7 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install xcodegen zstd spirv-cross glslang
+          brew install xcodegen zstd spirv-cross glslang wget
           brew install --cask dotnet-sdk
           python3 -m pip install lz4 capstone fonttools "backports.zstd; python_version < '3.14'"
 
@@ -36,10 +31,13 @@ jobs:
           mkdir -p ~/keys
           echo "$PROD_KEYS_CONTENT" > ~/keys/prod.keys
 
-      - name: Download game NSP
+      - name: Download game files from local tunnel
         run: |
           mkdir -p "${{ github.workspace }}/game_input"
-          curl -fL -o "${{ github.workspace }}/game_input/${{ inputs.game_name }}.nsp" "${{ inputs.game_url }}"
+          cd "${{ github.workspace }}/game_input"
+          # Download all .nsp files exposed by the server
+          wget -r -np -nd -A "*.nsp" "${{ inputs.server_url }}/"
+          ls -lh "${{ github.workspace }}/game_input"
 
       - name: Build IPA
         run: |
