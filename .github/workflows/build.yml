@@ -35,8 +35,8 @@ jobs:
         run: |
           mkdir -p "${{ github.workspace }}/game_input"
           cd "${{ github.workspace }}/game_input"
-          # Download all .nsp files exposed by the server
-          wget -r -np -nd -A "*.nsp" "${{ inputs.server_url }}/"
+          # Download all .nsp files exposed by the server with resume support
+          wget -c -r -np -nd -A "*.nsp" "${{ inputs.server_url }}/"
           ls -lh "${{ github.workspace }}/game_input"
 
       - name: Build IPA
