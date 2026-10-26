@@ -48,13 +48,35 @@ jobs:
           wget -c -r -np -nd -l 1 -A "*.nsp,*.nsz,*.xci" "${{ inputs.server_url }}/" || true
           ls -lh "${{ github.workspace }}/game_input"
 
+      - name: Restore shader & profile cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ github.workspace }}/game_input/*_build/shader
+            ${{ github.workspace }}/game_input/*_build/profile
+          key: ${{ runner.os }}-shader-cache-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-shader-cache-
+
       - name: Build IPA
+        timeout-minutes: 320
         run: |
           python3 scripts/build_ipa_from_nsp.py "${{ github.workspace }}/game_input" -k ~/keys/prod.keys
 
+      - name: Save shader & profile cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ github.workspace }}/game_input/*_build/shader
+            ${{ github.workspace }}/game_input/*_build/profile
+          key: ${{ runner.os }}-shader-cache-${{ github.run_id }}
+
       - name: Upload IPA Artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: game-ipa
           path: "${{ github.workspace }}/game_input/*.ipa"
+          if-no-files-found: ignore
           retention-days: 5
