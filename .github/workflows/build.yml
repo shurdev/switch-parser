@@ -44,8 +44,8 @@ jobs:
         run: |
           mkdir -p "${{ github.workspace }}/game_input"
           cd "${{ github.workspace }}/game_input"
-          # Download all .nsp and .nsz files exposed by the server with resume support
-          wget -c -r -np -nd -A "*.nsp,*.nsz,*.xci" "${{ inputs.server_url }}/"
+          # Download all game files with resume and max level 1 (ignore subfolder 404s)
+          wget -c -r -np -nd -l 1 -A "*.nsp,*.nsz,*.xci" "${{ inputs.server_url }}/" || true
           ls -lh "${{ github.workspace }}/game_input"
 
       - name: Build IPA
