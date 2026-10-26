@@ -18,6 +18,15 @@ jobs:
           repository: seedds/nxnative
           submodules: recursive
 
+      - name: Select latest Xcode 16
+        run: |
+          XCODE_PATH=$(find /Applications -maxdepth 1 -name "Xcode_16*.app" | sort -V | tail -n 1)
+          if [ -n "$XCODE_PATH" ]; then
+            echo "Selecting $XCODE_PATH"
+            sudo xcode-select -s "$XCODE_PATH"
+          fi
+          xcodebuild -version
+
       - name: Install dependencies
         run: |
           brew install xcodegen zstd spirv-cross glslang wget
