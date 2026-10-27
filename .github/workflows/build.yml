@@ -68,7 +68,7 @@ jobs:
       - name: Build IPA
         timeout-minutes: 270
         run: |
-          python3 scripts/build_ipa_from_nsp.py "${{ github.workspace }}/game_input" -k ~/keys/prod.keys
+          python3 scripts/build_ipa_from_nsp.py "${{ github.workspace }}/game_input" -k ~/keys/prod.keys --allow-other-metal
 
       - name: Stop background compilers
         if: always()
