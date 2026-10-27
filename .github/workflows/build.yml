@@ -59,9 +59,15 @@ jobs:
             ${{ runner.os }}-shader-cache-
 
       - name: Build IPA
-        timeout-minutes: 320
+        timeout-minutes: 280
         run: |
           python3 scripts/build_ipa_from_nsp.py "${{ github.workspace }}/game_input" -k ~/keys/prod.keys
+
+      - name: Stop background compilers
+        if: always()
+        run: |
+          killall -9 metal python3 2>/dev/null || true
+          sleep 5
 
       - name: Save shader & profile cache
         if: always()
