@@ -33,6 +33,21 @@ jobs:
           brew install --cask dotnet-sdk
           python3 -m pip install --break-system-packages nsz lz4 capstone fonttools "backports.zstd; python_version < '3.14'"
 
+          # Patch Homebrew gtar so exit code 1 (file changed as we read it) doesn't abort actions/cache
+          if [ -f /opt/homebrew/bin/gtar ]; then
+            sudo mv /opt/homebrew/bin/gtar /opt/homebrew/bin/gtar.real
+            sudo tee /opt/homebrew/bin/gtar > /dev/null << 'EOF'
+#!/bin/bash
+/opt/homebrew/bin/gtar.real --warning=no-file-changed "$@"
+rc=$?
+if [ $rc -eq 1 ]; then
+  exit 0
+fi
+exit $rc
+EOF
+            sudo chmod +x /opt/homebrew/bin/gtar
+          fi
+
       - name: Setup prod.keys
         env:
           PROD_KEYS_CONTENT: ${{ secrets.PROD_KEYS }}
@@ -59,15 +74,19 @@ jobs:
             ${{ runner.os }}-shader-cache-
 
       - name: Build IPA
-        timeout-minutes: 280
+        timeout-minutes: 270
         run: |
           python3 scripts/build_ipa_from_nsp.py "${{ github.workspace }}/game_input" -k ~/keys/prod.keys
 
       - name: Stop background compilers
         if: always()
         run: |
-          killall -9 metal python3 2>/dev/null || true
+          pkill -9 -i python || true
+          pkill -9 -i metal || true
+          pkill -9 -i clang || true
+          pkill -9 -i xcrun || true
           sleep 5
+          sync
 
       - name: Save shader & profile cache
         if: always()
