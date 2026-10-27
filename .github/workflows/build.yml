@@ -36,15 +36,7 @@ jobs:
           # Patch Homebrew gtar so exit code 1 (file changed as we read it) doesn't abort actions/cache
           if [ -f /opt/homebrew/bin/gtar ]; then
             sudo mv /opt/homebrew/bin/gtar /opt/homebrew/bin/gtar.real
-            sudo tee /opt/homebrew/bin/gtar > /dev/null << 'EOF'
-#!/bin/bash
-/opt/homebrew/bin/gtar.real --warning=no-file-changed "$@"
-rc=$?
-if [ $rc -eq 1 ]; then
-  exit 0
-fi
-exit $rc
-EOF
+            printf '#!/bin/bash\n/opt/homebrew/bin/gtar.real --warning=no-file-changed "$@"\nrc=$?\nif [ $rc -eq 1 ]; then\n  exit 0\nfi\nexit $rc\n' | sudo tee /opt/homebrew/bin/gtar > /dev/null
             sudo chmod +x /opt/homebrew/bin/gtar
           fi
 
